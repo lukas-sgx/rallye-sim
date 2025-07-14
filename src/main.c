@@ -14,9 +14,6 @@ int main(int argc, char const *argv[])
         wait_ms(200);
     }
     
-        //update_dashboard
-        //
-    
     endwin();
     return 0;
 }
