@@ -11,7 +11,7 @@ int main(int argc, char const *argv[])
 
     while (running)
     {
-        wait_ms(200);
+        //wait_ms(0.2);
     }
     
     endwin();

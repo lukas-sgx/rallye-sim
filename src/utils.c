@@ -1,5 +1,5 @@
 #include <unistd.h>
 
-void wait_ms(int milliseconds){
-    usleep(milliseconds);
+void wait_ms(int ms){
+    usleep(ms * 1000);
 }
