@@ -7,7 +7,7 @@
 int main(int argc, char const *argv[])
 {   
     init_dashboard();
-    
+
     endwin();
     return 0;
 }
