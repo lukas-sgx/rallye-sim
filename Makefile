@@ -5,5 +5,5 @@ LAUNCH = @echo "Lauch Rally - Pannel" && ./output/build/app
 
 build: $(DEP)
 	@echo "MK - build" && mkdir -p output/build
-	$(CC) $(DEP) -o $(OUTPUT) -lncurses
+	$(CC) $(DEP) -o $(OUTPUT) -lpthread -lncurses
 	$(LAUNCH)
