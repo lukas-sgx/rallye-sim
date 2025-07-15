@@ -7,7 +7,7 @@
 #include "../include/data.h"
 #include "../include/utils.h"
 
-#define LINES 8
+#define LINES 7
 
 typedef struct {
     WINDOW *win;
@@ -38,6 +38,7 @@ void draw_info_panel(WINDOW *win, float rpm, float throttle, int gear, int speed
     float boostParam = -0.4f;
     float T_water = 25.0f;
     float T_amb = 25.0f;
+    float oilPressure = 1.0f;
 
     wattron(win, COLOR_PAIR(6));
     boostParam = get_boost(rpm, throttle, boostParam, 1.5f, 0.05f);
@@ -63,6 +64,22 @@ void draw_info_panel(WINDOW *win, float rpm, float throttle, int gear, int speed
     }
     wrefresh(win);
     wattroff(win, COLOR_PAIR(5));
+
+    wattron(win, COLOR_PAIR(7));
+    oilPressure = get_oil_pressure(rpm, oilPressure, 5.5f, 0.05f);
+    mvwprintw(win, 4, 4, "OILP   %.2f bar", oilPressure);
+    wrefresh(win);
+    wattroff(win, COLOR_PAIR(7));
+
+    wattron(win, COLOR_PAIR(2));
+    mvwprintw(win, 4, 61-17, "SPEED  %u km/h", speed);
+    wrefresh(win);
+    wattroff(win, COLOR_PAIR(2));
+
+    wattron(win, COLOR_PAIR(3));
+    mvwprintw(win, 6, 4, "[ RPM: %.f ]", rpm);
+    wrefresh(win);
+    wattroff(win, COLOR_PAIR(3));
 
     wait_ms(100);
 }

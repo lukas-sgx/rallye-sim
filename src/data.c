@@ -28,3 +28,18 @@ float get_WaterTemp(float T_old, float rpm, float throttle, float T_amb, float d
 
     return T_new;
 }
+
+float get_oil_pressure(float rpm, float oilPressure, float maxOilPressure, float oilSpool) {
+    float targetPressure;
+
+    if (rpm < 1000.0f) {
+        targetPressure = 1.0f;  // minimum pression au ralenti
+    } else {
+        float rpmRatio = rpm / 6000.0f; // 6000 = régime max
+        if (rpmRatio > 1.0f) rpmRatio = 1.0f;
+        targetPressure = 1.0f + rpmRatio * (maxOilPressure - 1.0f);
+    }
+
+    oilPressure += (targetPressure - oilPressure) * oilSpool;
+    return oilPressure;
+}
