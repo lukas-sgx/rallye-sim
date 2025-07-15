@@ -5,6 +5,22 @@
 
 #define LINES 8
 
+int wait_ms_interruptible(int ms) {
+    int elapsed = 0;
+    int interval = 10;
+
+    while (elapsed < ms) {
+        int ch = getch();
+        if (ch == 'q') {
+            ungetch(ch);
+            return 1;
+        }
+        wait_ms(interval);
+        elapsed += interval;
+    }
+    return 0;
+}
+
 void set_border(WINDOW *win, int lines){
     int i = 0;
     wattron(win,COLOR_PAIR(1));   
@@ -30,7 +46,7 @@ void draw_shiftLigths(WINDOW *win, int init){
 
         mvwprintw(win, 1, 21, "○ ○ ○ ○ ○ ○ ○ ○ ○ ○");
         wrefresh(win);
-        wait_ms(1000);
+        if(wait_ms_interruptible(1000)) return;
 
         while(colorIter <= 4){
             wattron(win, COLOR_PAIR(1)); 
@@ -48,17 +64,16 @@ void draw_shiftLigths(WINDOW *win, int init){
                     if (len < sizeof(buffer) - 4) { 
                         snprintf(buffer + len, sizeof(buffer) - len, "●");
                     }
-                }else{
+                } else {
                     if (len < sizeof(buffer) - 4) { 
                         snprintf(buffer + len, sizeof(buffer) - len, " ●");
                     }
                 }
                 mvwprintw(win, 1, 21, buffer);
-                
-                wait_ms(100);
                 wrefresh(win);
+
+                if(wait_ms_interruptible(100)) return;
                 i++;
-                
             }
 
             wattroff(win, COLOR_PAIR(colorIter));  
@@ -67,28 +82,26 @@ void draw_shiftLigths(WINDOW *win, int init){
             if (i == 10){
                 i = 0;
             }
-            wait_ms(200);
+            if(wait_ms_interruptible(200)) return;
         }
         
-        wait_ms(100);
+        if(wait_ms_interruptible(100)) return;
         if (colorIter == 5){
             int a = 0;
-
-            while (a <= 2)
-            {
+            while (a <= 2) {
                 wattron(win, COLOR_PAIR(1)); 
                 mvwprintw(win, 1, 21, "○ ○ ○ ○ ○ ○ ○ ○ ○ ○");
                 wrefresh(win);
-                wait_ms(200);
+                if(wait_ms_interruptible(200)) return;
                 wattroff(win, COLOR_PAIR(1)); 
+
                 wattron(win, COLOR_PAIR(4)); 
                 mvwprintw(win, 1, 21, "● ● ● ● ● ● ● ● ● ●");
                 wrefresh(win);
-                wait_ms(200);
+                if(wait_ms_interruptible(200)) return;
                 wattroff(win, COLOR_PAIR(4)); 
                 a++;
             }
-
             wattron(win, COLOR_PAIR(1)); 
             mvwprintw(win, 1, 21, "○ ○ ○ ○ ○ ○ ○ ○ ○ ○");
             wrefresh(win);
@@ -123,13 +136,35 @@ void init_colors() {
     init_pair(7, COLOR_MAGENTA, -1); // Huile
 }
 
+void dashboard_loop(WINDOW *win) {
+    int ch;
+    int running = 1;
+    int initialisation = 0;
+
+    while (running) {
+        ch = getch();
+
+        if (ch == 'q'){
+            break;
+        }else if (ch == 's'){
+            if (initialisation == 0){ 
+                initialisation = 1;
+                draw_shiftLigths(win, 1);
+            }
+        }
+    }
+}
+
 void init_dashboard(){
     CLEAR_SCREEN();
     setlocale(LC_ALL, "");
     init_colors();
-
+    cbreak();
+    keypad(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
     set_border(stdscr, LINES);
-    draw_shiftLigths(stdscr, 1);
     
     refresh();
+
+    dashboard_loop(stdscr);
 }
