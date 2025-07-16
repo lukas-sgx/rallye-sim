@@ -1,45 +1,51 @@
-float get_boost(float rpm, float throttle, float boost, float boostMax, float boostSpool) {
-    float targetBoost;
+float get_boost(float rpm, float throttle, float previous_boost, float max_boost, float inertia) {
+    const float base_boost = -0.3f;
+    const float turbo_start_rpm = 1800.0f;
+    const float turbo_full_rpm = 5000.0f;
 
-    if (rpm < 1500.0f) {
-        targetBoost = -0.4f + throttle * 0.2f;
-    } else {
-        float rpmFactor = (rpm - 1500.0f) / 3000.0f;
-        if (rpmFactor > 1.0f) rpmFactor = 1.0f;
-        if (rpmFactor < 0.0f) rpmFactor = 0.0f;
-        targetBoost = throttle * boostMax * rpmFactor;
+    if (throttle < 0.05f) {
+        return previous_boost + (base_boost - previous_boost) * inertia;
     }
 
-    boost += (targetBoost - boost) * boostSpool;
-    return boost;
+    float rpm_factor = (rpm - turbo_start_rpm) / (turbo_full_rpm - turbo_start_rpm);
+    if (rpm_factor < 0.0f) rpm_factor = 0.0f;
+    if (rpm_factor > 1.0f) rpm_factor = 1.0f;
+
+    float target_boost = base_boost + throttle * rpm_factor * (max_boost - base_boost);
+    return previous_boost + (target_boost - previous_boost) * inertia;
 }
 
-float get_WaterTemp(float T_old, float rpm, float throttle, float T_amb, float dt) {
-    float a = 0.0001f; 
-    float b = 0.01f;
+// Fonction température eau réaliste
+float get_WaterTemp(float current_temp, float rpm, float throttle, float ambient_temp, float time_seconds) {
+    float heating = 0.02f * throttle * (rpm / 1000.0f);
+    float cooling = 0.001f;
 
-    float heat = a * rpm * throttle;
-    float cool = b * (T_old - T_amb);
+    float target_temp = ambient_temp + 65.0f + throttle * 35.0f;
 
-    float T_new = T_old + (heat - cool) * dt;
+    current_temp += (target_temp - current_temp) * heating;
+    current_temp -= (current_temp - ambient_temp) * cooling;
 
-    if (T_new < T_amb) T_new = T_amb;
-    if (T_new > 120.0f) T_new = 120.0f; 
+    // Clamp température raisonnable
+    if (current_temp < ambient_temp) current_temp = ambient_temp;
+    if (current_temp > 110.0f) current_temp = 110.0f;
 
-    return T_new;
+    return current_temp;
 }
 
-float get_oil_pressure(float rpm, float oilPressure, float maxOilPressure, float oilSpool) {
-    float targetPressure;
+// Pression huile simplifiée
+float get_oil_pressure(float rpm, float previous_pressure, float max_pressure, float inertia) {
+    float target_pressure = (rpm / 7000.0f) * max_pressure;
+    if (target_pressure < 1.0f) target_pressure = 1.0f;  // Minimum pression huile
 
-    if (rpm < 1000.0f) {
-        targetPressure = 1.0f;  // minimum pression au ralenti
-    } else {
-        float rpmRatio = rpm / 6000.0f; // 6000 = régime max
-        if (rpmRatio > 1.0f) rpmRatio = 1.0f;
-        targetPressure = 1.0f + rpmRatio * (maxOilPressure - 1.0f);
-    }
+    return previous_pressure + (target_pressure - previous_pressure) * inertia;
+}
 
-    oilPressure += (targetPressure - oilPressure) * oilSpool;
-    return oilPressure;
+float update_rpm(float rpm, float throttle) {
+    const float rpm_idle = 800.0f;
+    const float rpm_max = 7000.0f;
+
+    float rpm_target = rpm_idle + throttle * (rpm_max - rpm_idle);
+    rpm += (rpm_target - rpm) * 0.05f; 
+
+    return rpm;
 }
